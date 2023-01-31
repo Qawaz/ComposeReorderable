@@ -1,4 +1,5 @@
 import org.jetbrains.compose.ComposeBuildConfig.composeVersion
+import java.util.Properties;
 
 plugins {
     kotlin("multiplatform")
@@ -7,7 +8,7 @@ plugins {
     id("signing")
 }
 
-group = "org.burnoutcrew.composereorderable"
+group = "com.qawaz"
 version = "0.9.6"
 
 kotlin {
@@ -26,9 +27,12 @@ kotlin {
     }
 }
 
-val javadocJar = tasks.register("javadocJar", Jar::class.java) {
-    archiveClassifier.set("javadoc")
-}
+//val javadocJar = tasks.register("javadocJar", Jar::class.java) {
+//    archiveClassifier.set("javadoc")
+//}
+
+val propertiesFile = project.rootProject.file("github.properties")
+val isGithubPropAvailable = propertiesFile.exists()
 
 publishing {
     publications {
@@ -43,11 +47,30 @@ publishing {
                     password = extra.properties.getOrDefault("ossrh.Password", "") as String
                 }
             }
+
+            if(isGithubPropAvailable) {
+                val githubProperties = Properties().apply {
+                    propertiesFile.reader().use { load(it) }
+                }
+
+                maven {
+                    name = "GithubPackages"
+                    url = uri("https://maven.pkg.github.com/Qawaz/ComposeReorderable")
+                    try {
+                        credentials {
+                            username = (githubProperties["gpr.usr"] ?: System.getenv("GPR_USER")).toString()
+                            password = (githubProperties["gpr.key"] ?: System.getenv("GPR_API_KEY")).toString()
+                        }
+                    } catch (ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
+            }
         }
     }
     publications {
         withType<MavenPublication> {
-            artifact(javadocJar)
+//            artifact(javadocJar)
             pom {
                 name.set("ComposeReorderable")
                 description.set("Reorderable Compose LazyList")
@@ -77,6 +100,18 @@ publishing {
     }
 }
 
-signing {
-    sign(publishing.publications)
+//signing {
+//    sign(publishing.publications)
+//}
+
+val checkGithubTask = tasks.register("checkGithubProperties") {
+    doLast {
+        if (!isGithubPropAvailable) {
+            error("Github properties file is not available. Throwing error.")
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository::class.java).configureEach {
+    dependsOn(checkGithubTask)
 }
