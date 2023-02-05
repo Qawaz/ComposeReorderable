@@ -4,14 +4,18 @@ import java.util.Properties;
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
+    id("com.android.library")
     id("maven-publish")
     id("signing")
 }
 
 group = "com.qawaz"
-version = "0.9.6"
+version = "0.9.7"
 
 kotlin {
+    android {
+        publishLibraryVariants("release")
+    }
     jvm()
     js(IR) {
         browser()
@@ -114,4 +118,12 @@ val checkGithubTask = tasks.register("checkGithubProperties") {
 
 tasks.withType(PublishToMavenRepository::class.java).configureEach {
     dependsOn(checkGithubTask)
+}
+
+android {
+    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    compileSdk = 33
+    defaultConfig {
+        minSdk = 21
+    }
 }
