@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.qawaz"
-version = "0.9.7"
+version = "0.9.8"
 
 kotlin {
     android {
@@ -35,9 +35,6 @@ kotlin {
 //    archiveClassifier.set("javadoc")
 //}
 
-val propertiesFile = project.rootProject.file("github.properties")
-val isGithubPropAvailable = propertiesFile.exists()
-
 publishing {
     publications {
         repositories {
@@ -52,22 +49,15 @@ publishing {
                 }
             }
 
-            if(isGithubPropAvailable) {
-                val githubProperties = Properties().apply {
-                    propertiesFile.reader().use { load(it) }
-                }
-
-                maven {
-                    name = "GithubPackages"
-                    url = uri("https://maven.pkg.github.com/Qawaz/ComposeReorderable")
-                    try {
-                        credentials {
-                            username = (githubProperties["gpr.usr"] ?: System.getenv("GPR_USER")).toString()
-                            password = (githubProperties["gpr.key"] ?: System.getenv("GPR_API_KEY")).toString()
-                        }
-                    } catch (ex: Exception) {
-                        ex.printStackTrace()
+            maven("https://maven.pkg.github.com/Qawaz/ComposeReorderable") {
+                name = "GithubPackages"
+                try {
+                    credentials {
+                        username = (System.getenv("GPR_USER")).toString()
+                        password = (System.getenv("GPR_API_KEY")).toString()
                     }
+                } catch (ex: Exception) {
+                    ex.printStackTrace()
                 }
             }
         }
@@ -107,18 +97,6 @@ publishing {
 //signing {
 //    sign(publishing.publications)
 //}
-
-val checkGithubTask = tasks.register("checkGithubProperties") {
-    doLast {
-        if (!isGithubPropAvailable) {
-            error("Github properties file is not available. Throwing error.")
-        }
-    }
-}
-
-tasks.withType(PublishToMavenRepository::class.java).configureEach {
-    dependsOn(checkGithubTask)
-}
 
 android {
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
