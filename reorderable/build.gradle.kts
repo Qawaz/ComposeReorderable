@@ -10,10 +10,10 @@ plugins {
 }
 
 group = "com.qawaz"
-version = "0.9.8"
+version = "0.9.9"
 
 kotlin {
-    android {
+    androidTarget {
         publishLibraryVariants("release")
     }
     jvm()
@@ -99,9 +99,14 @@ publishing {
 //}
 
 android {
+    namespace = "org.burnoutcrew.reorderable"
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     compileSdk = 33
     defaultConfig {
         minSdk = 21
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
